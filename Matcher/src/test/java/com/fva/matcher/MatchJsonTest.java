@@ -1,21 +1,19 @@
 package com.fva.matcher;
 
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.fva.matcher.MatchJson.hasExactlySameStateAs;
+import static com.fva.matcher.MatchJson.hasSameStateAs;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MatchJsonTest {
 
     @Test
-    public void MatcherTest() {
-
+    void MatcherTest() {
+        // age field is missing in expected, it will be ignored as MatchJson.strict = false
         String expected = """
                 {
                   "name": "john doe",
-                  "age": 30,
                   "address": {
                     "street": "White street",
                     "number": 1,
@@ -57,13 +55,13 @@ public class MatchJsonTest {
                   }
                 }""";
 
-        assertFalse(new MatchJson(expected).matches(wrongJson));
-        assertTrue(new MatchJson(expected).matches(goodJson));
+        assertFalse(hasSameStateAs(expected).matches(wrongJson));
+        assertTrue(hasSameStateAs(expected).matches(goodJson));
 
     }
 
     @Test
-    public void MatcherWithNullValuesTest() {
+    void MatcherWithNullValuesTest() {
 
         String expected = """
                 {
@@ -96,12 +94,12 @@ public class MatchJsonTest {
                 }""";
 
 
-        assertTrue(new MatchJson(expected).matches(actual));
+        assertTrue(hasSameStateAs(expected).matches(actual));
 
     }
 
     @Test
-    public void MatcherExpectedUnknownKeyTest() {
+    void MatcherExpectedUnknownKeyTest() {
 
         String expected = """
                 {
@@ -135,8 +133,99 @@ public class MatchJsonTest {
                 }""";
 
 
-        Assertions.assertThrows(IllegalStateException.class, () -> new MatchJson(expected).matches(actual));
+        assertThrows(IllegalArgumentException.class, () -> hasSameStateAs(expected).matches(actual));
 
+    }
+
+    @Test
+    void StrictMatcherTest() {
+
+        String expected = """
+                [{
+                  "name": "john doe",
+                  "age": 30,
+                  "address": {
+                    "street": "White street",
+                    "number": 1,
+                    "zip": [
+                      {
+                        "postcode": 123
+                      }
+                    ]
+                  }
+                }]""";
+
+        String actual = """
+                [{
+                                 "name": "john doe",
+                                 "age": 30,
+                                 "address": {
+                                   "street": "White street",
+                                   "number": 1,
+                                   "zip": [
+                                     {
+                                       "postcode": 123
+                                     }
+                                   ]
+                                 }
+                               }]""";
+
+        assertTrue(hasExactlySameStateAs(expected).matches(actual));
+
+
+    }
+
+    @Test
+    void complexJsonTest() {
+        String expected = """
+                {
+                  "name": "john doe",
+                  "address": {
+                    "street": "White street",
+                    "number": 1,
+                    "zip": [
+                      {
+                        "test": 123
+                      },
+                      {
+                        "test": 456,
+                        "zozo": [
+                          {
+                            "zaza": "908",
+                            "zizi": "0987"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }""";
+
+        String actual = """
+                {
+                  "name": "john doe",
+                  "address": {
+                    "street": "White street",
+                    "number": 1,
+                    "zip": [
+                      {
+                        "test": 123
+                      },
+                      {
+                        "test": 456,
+                        "zozo": [
+                          {
+                            "zaza": "908",
+                            "zizi": "0987"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }""";
+
+
+        assertTrue(hasSameStateAs(expected).matches(actual));
+        // Assertions.assertFalse(MatchJson.hasExactlyStateAs(expected).matches(actual));
     }
 
 }
